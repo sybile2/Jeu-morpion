@@ -1,0 +1,340 @@
+<html>
+<head>
+	<title>Morpint</title>
+	<style type='text/css'>
+		body {
+			background: #c1d0ff;
+		}
+		
+
+		#left {
+			float:left;
+			width:200px;
+			height:470px;
+			text-align: center;
+			margin-left:15px;
+
+			
+		}
+		
+		#right {
+			float:left;
+			width:200px;
+			height:470px;
+			margin-left:15px;
+			text-align: center;
+
+		}
+		
+		#center {
+			float:left;
+			width:470px;
+			height:470px;
+			margin-left:0px;
+		}
+						
+		#conteneur {
+			width: 900px;
+			height: 470px;
+			margin: 0 auto;
+			background: #c1d0ff;
+			text-align: center;
+			font-size:50px;
+			color:#ffffff;
+		}
+		
+
+		#score1 {
+			text-align: center;
+			font-size: 200px;
+			color:#1643ff;
+		}
+		
+		#score2 {
+			text-align: center;
+			font-size: 200px;
+			color:#ffdb00;
+		}
+
+		h1 {
+			text-align: center;
+			font-variant: small-caps;
+			color: #ffffff;
+		}
+		
+		h4 {
+			text-align: center;
+			color: #ffffff;
+		}
+		
+		h5 {
+			text-align: center;
+			color: #ffffff;
+		}
+
+		
+		
+	</style>
+	<script type="text/javascript">
+	
+	// Constantes du jeu
+	var NBR_LIGNES = 3;
+	var NBR_COLONNES = 3;
+	var CASE_WIDTH = 150;
+	var CASE_HEIGHT = 150;
+	var ESPACE_CASE = 10;
+	var COULEUR_CASE = ["#ffffff","#1643ff","#ffdb00"];
+	var TABLE_DE_JEU = [[65,90,69],[81,83,68],[87,88,67]];
+	var SCORE_FIN = 3;
+	
+	
+	// Variables
+	var ZONE_JEU_WIDTH;
+	var ZONE_JEU_HEIGHT;
+	var tabGrille; // Tableau virtuel contenant les croix et les ronds
+	var context;
+	var boucleJeu;
+	var J1Gagne;
+	var J2Gagne;
+	var scoreJ1 = 0;
+	var scoreJ2 = 0;
+	var nombre_cases_remplies;
+	var joueur; // vaudra J1 pour le joueur 1 et J2 pour le joueur 2
+	var previous_beginner = 'J2';
+	var beginner; // vaudra J1 si le joueur 1 le joueur 1 commence et J2 si c'est le joueur 2
+	var tirage;
+
+	window.addEventListener('load', fonctionPrincipale, false);
+
+	function fonctionPrincipale () {
+	 	  // On récupère l'objet canvas
+	  var elem = document.getElementById('canvasElem');
+	  if (!elem || !elem.getContext) {
+		return;
+	  }
+
+	  // On récupère le contexte 2D
+	  context = elem.getContext('2d');
+	  if (!context) {
+		return;
+	  }
+
+	  // Initialisations des variables
+		ZONE_JEU_WIDTH = elem.width;
+		ZONE_JEU_HEIGHT = elem.height;
+		if (previous_beginner == 'J1'){beginner='J2';}
+		if (previous_beginner == 'J2'){beginner='J1';}
+		joueur = beginner;
+		previous_beginner = beginner;
+		J1Gagne = 0;
+		J2Gagne = 0;
+		nombre_cases_remplies = 0;
+		
+		document.getElementById("score1").innerHTML =  scoreJ1 ;
+		document.getElementById("score2").innerHTML =  scoreJ2 ;
+		document.getElementById("beg").innerHTML =  beginner ;
+		
+		if ((scoreJ1 == SCORE_FIN) || (scoreJ2 == SCORE_FIN)){
+			return 1;
+		}
+	  
+	  // Le navigateur est compatible, on peut continuer: On initialise le jeu.
+	  creerGrille(context, NBR_LIGNES, NBR_COLONNES, CASE_WIDTH, CASE_HEIGHT, ESPACE_CASE);
+
+	  // Refresh de départ
+	  refreshGame();
+
+	  // Gestion des évènements
+	  window.document.onkeydown = remplirCase;
+
+	}
+
+	function refreshGame() {
+		if ((scoreJ1 == SCORE_FIN) || (scoreJ2 == SCORE_FIN)){
+		return 1;
+		}
+
+		// On vérifie si un joueur a gagné
+		
+		verifierVictoire();
+		
+		if ( J1Gagne ) j1gagne();
+		if ( J2Gagne ) j2gagne();
+		
+		// si toutes les cases sont remplies mais que la partie n'est pas gagnée, on réinitialise la grille.
+		if (nombre_cases_remplies == 9){
+		alert('match nul, essayez encore!');
+		fonctionPrincipale();
+		
+		}
+	
+	}
+	
+	function remplirCase(e) {
+		
+	var diane;	
+	var martin;
+	
+		if ((scoreJ1 == SCORE_FIN) || (scoreJ2 == SCORE_FIN)){
+			return 1;
+		}
+		
+		if (joueur == ('J1')){
+		diane = e.keyCode;
+		}
+		
+		if (joueur == ('J2')){
+				martin = Math.floor((Math.random() * 8) + 1);
+				if (martin == 0) { diane = 66;}
+				if (martin == 1) { diane = 90;}
+				if (martin == 2) { diane = 69;}
+				if (martin == 3) { diane = 81;}
+				if (martin == 4) { diane = 83;}
+				if (martin == 5) { diane = 68;}
+				if (martin == 6) { diane = 87;}
+				if (martin == 7) { diane = 88;}
+				if (martin == 8) { diane = 67;}
+		}
+
+	
+		// Touche du clavier issue de la table de jeu pressée (a,z,e,q,s,d,w,x,c)
+		for (var i=0; i < tabGrille.length; i++) {
+			for (var j=0; j < tabGrille[i].length; j++) {
+				if ((diane == TABLE_DE_JEU[i][j]) && (tabGrille[i][j] != 0) && (joueur == 'J2')) {
+					remplirCase(e);
+				}
+				else if ((diane == TABLE_DE_JEU[i][j]) && (tabGrille[i][j] == 0) && (joueur == 'J1')) {
+					tabGrille[i][j] = 1;
+					context.fillStyle = COULEUR_CASE[1];
+					context.fillRect((j*(CASE_WIDTH+ESPACE_CASE)),(i*(CASE_HEIGHT+ESPACE_CASE)),CASE_WIDTH,CASE_HEIGHT);
+					joueur = 'J2';
+					nombre_cases_remplies += 1;
+				}
+				else if ((diane == TABLE_DE_JEU[i][j]) && (tabGrille[i][j] == 0) && (joueur == 'J2')) {
+					tabGrille[i][j] = 2;
+					context.fillStyle = COULEUR_CASE[2];
+					context.fillRect((j*(CASE_WIDTH+ESPACE_CASE)),(i*(CASE_HEIGHT+ESPACE_CASE)),CASE_WIDTH,CASE_HEIGHT);
+					joueur = 'J1';
+					nombre_cases_remplies += 1;
+				}
+			}
+		}
+		
+		refreshGame();
+	}
+
+	function verifierVictoire(){
+
+		if ( (tabGrille[0][0] == 1) && (tabGrille[0][1] == 1) && (tabGrille[0][2] == 1) ){J1Gagne = 1;} //1ere ligne horizontale
+		if ( (tabGrille[1][0] == 1) && (tabGrille[1][1] == 1) && (tabGrille[1][2] == 1) ){J1Gagne = 1;} //2eme ligne horizontale
+		if ( (tabGrille[2][0] == 1) && (tabGrille[2][1] == 1) && (tabGrille[2][2] == 1) ){J1Gagne = 1;} //3eme ligne horizontale
+		if ( (tabGrille[0][0] == 1) && (tabGrille[1][0] == 1) && (tabGrille[2][0] == 1) ){J1Gagne = 1;} //1ere ligne verticale
+		if ( (tabGrille[0][1] == 1) && (tabGrille[1][1] == 1) && (tabGrille[2][1] == 1) ){J1Gagne = 1;} //2eme ligne verticale
+		if ( (tabGrille[0][2] == 1) && (tabGrille[1][2] == 1) && (tabGrille[2][2] == 1) ){J1Gagne = 1;} //3eme ligne verticale
+		if ( (tabGrille[0][0] == 1) && (tabGrille[1][1] == 1) && (tabGrille[2][2] == 1) ){J1Gagne = 1;} //1ere diagonale
+		if ( (tabGrille[2][0] == 1) && (tabGrille[1][1] == 1) && (tabGrille[0][2] == 1) ){J1Gagne = 1;} //2eme diagonale
+		
+		if ( (tabGrille[0][0] == 2) && (tabGrille[0][1] == 2) && (tabGrille[0][2] == 2) ){J2Gagne = 1;} //1ere ligne horizontale
+		if ( (tabGrille[1][0] == 2) && (tabGrille[1][1] == 2) && (tabGrille[1][2] == 2) ){J2Gagne = 1;} //2eme ligne horizontale
+		if ( (tabGrille[2][0] == 2) && (tabGrille[2][1] == 2) && (tabGrille[2][2] == 2) ){J2Gagne = 1;} //3eme ligne horizontale
+		if ( (tabGrille[0][0] == 2) && (tabGrille[1][0] == 2) && (tabGrille[2][0] == 2) ){J2Gagne = 1;} //1ere ligne verticale
+		if ( (tabGrille[0][1] == 2) && (tabGrille[1][1] == 2) && (tabGrille[2][1] == 2) ){J2Gagne = 1;} //2eme ligne verticale
+		if ( (tabGrille[0][2] == 2) && (tabGrille[1][2] == 2) && (tabGrille[2][2] == 2) ){J2Gagne = 1;} //3eme ligne verticale
+		if ( (tabGrille[0][0] == 2) && (tabGrille[1][1] == 2) && (tabGrille[2][2] == 2) ){J2Gagne = 1;} //1ere diagonale
+		if ( (tabGrille[2][0] == 2) && (tabGrille[1][1] == 2) && (tabGrille[0][2] == 2) ){J2Gagne = 1;} //2eme diagonale
+	}
+			
+	function j1gagne() {
+		alert("Point pour les bleus!");
+		newScore();
+		verifierFin();
+		fonctionPrincipale();
+	}
+	
+	function j2gagne() {
+		alert("Point pour les jaunes!");
+		newScore();
+		verifierFin();
+		fonctionPrincipale();
+	}
+	
+	function newScore(){
+		if ( J1Gagne ){
+		scoreJ1 +=1;
+		}
+		if ( J2Gagne ){
+		scoreJ2 +=1;
+		}
+	}
+	
+	function verifierFin(){
+		if (scoreJ1 == SCORE_FIN){
+			alert ('Fin du jeu: Bravo! Tu as battu une intelligence artificielle de pointe');
+		}
+		if (scoreJ2 == SCORE_FIN){
+			alert ('Fin du jeu: Bravo! Perdre contre cet ordinateur n\'est pas une mince affaire!');
+		}
+		
+	}
+
+	function clearContexte(ctx, startwidth, ctxwidth, startheight, ctxheight) {
+		ctx.clearRect(startwidth, startheight, ctxwidth, ctxheight);
+	}
+	
+	function creerGrille(ctx, nbrLignes, nbrParLigne, largeur, hauteur, espace) {
+	
+		// Tableau virtuel: On initialise les lignes de briques
+		tabGrille = new Array(nbrLignes);
+		
+		for (var i=0; i < nbrLignes; i++) {
+			
+			// Tableau virtuel: On initialise les briques de la ligne
+			tabGrille[i] = new Array(nbrParLigne);
+			
+			// Affichage: On attribue une couleur aux briques de la ligne
+			ctx.fillStyle = COULEUR_CASE[0];
+			
+			for (var j=0; j < nbrParLigne; j++) {
+				
+				// Affichage: On affiche une nouvelle brique
+				ctx.fillRect((j*(largeur+espace)),(i*(hauteur+espace)),largeur,hauteur);
+				
+				// Tableau virtuel: On attribue à la case actuelle la valeur 0 = La case est vide
+				tabGrille[i][j] = 0;
+				
+			}
+		}
+		
+		// Notre grille est initialisée.
+		return 1;
+		
+	}
+
+	
+	</script>
+</head>
+<body>
+	<h1>Le jeu du morpion by Sybile Nivon</h1>
+	<h4>C'est <b id='beg'>beginner</b> qui commence! </br>
+	Pour J1 (vous), utilisez les 9 touches A,Z,E,Q,S,D,W,X,C à gauche du clavier (AZERTY) pour sélectionner une case. </br> 
+	Pour J2 (un ordinateur de pointe), utilisez une touche au hasard pour qu'une case soit sélectionnée.</h4> 
+
+	<div id='conteneur'>
+	
+			<div id="left">Score J1<br><b id='score1'>scoreJ1</b>
+			</div>
+			
+			<div id="center"><canvas id="canvasElem" width="470" height="470">
+			Internet Explorer est tout pourri! Donc change ça de suite ou prends un curly.
+			</canvas>
+			</div>
+			
+			<div id="right">Score J2<br><b id='score2'>scoreJ2</b>
+			</div>
+	
+	</div>
+	
+	<h5><a href="morpionessai.html">Faire une nouvelle partie?</a></h5> 
+	
+</body>
+</html>
