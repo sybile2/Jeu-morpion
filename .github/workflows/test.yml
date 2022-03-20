@@ -7,11 +7,21 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
       
+      
+      - name: Publish to itch.io
+        uses: josephbmanley/butler-publish-itchio-action@v1.0.2
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: web
+          ITCH_GAME: morpion
+          ITCH_USER: junkeecheese
+          PACKAGE: index.html
+
+
       - name: Notify Discord Channel
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@0.3.0
         with:
-          args: 'A new update of my project is available at https://kim.itch.io/rat. You should try it!'
+          args: 'A new update of my project is available at https://junkeecheese.itch.io/morpion. You should try it!'
