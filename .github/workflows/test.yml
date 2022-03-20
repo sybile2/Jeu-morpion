@@ -13,8 +13,6 @@ jobs:
   export-web:
     name: Web Export
     runs-on: ubuntu-latest
-    container:
-      image: adamrehn/ue4-engine
     steps:
       - name: Checkout
         uses: actions/checkout@v1
