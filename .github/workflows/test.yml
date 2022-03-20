@@ -1,4 +1,4 @@
-﻿name: sybile-test-ci
+﻿name: sybile-test-ci-2
 
 on:
   push:
