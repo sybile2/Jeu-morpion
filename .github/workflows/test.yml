@@ -1,19 +1,10 @@
-﻿name: sybile-test-ci
-
-on:
-  push:
-    branches: [ main ]
-
-   
-env:
-  EXPORT_NAME: project-sybile
-  GODOT_VERSION: 0.0.1
-
+﻿name: GitHub Actions Demo
+on: [push]
 jobs:
-  export-deploy:
-    name: Web Export
+  Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
