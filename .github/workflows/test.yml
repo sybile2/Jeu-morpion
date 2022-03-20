@@ -1,17 +1,54 @@
-﻿name: GitHub Actions Demo
-on: [push]
+﻿name: sybile-test-ci
+
+on:
+  push:
+    branches: [ main ]
+
+ 
+env:
+  EXPORT_NAME: project-sybile
+
+
 jobs:
-  Explore-GitHub-Actions:
+  export-web:
+    name: Web Export
     runs-on: ubuntu-latest
+    container:
+      image: adamrehn/ue4-engine
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Setup
         run: |
           ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+
+      - name: Build Unreal Project
+        run: |
+          cd project
+          mkdir ./$EXPORT_NAME
+          cd $EXPORT_NAME
+          mkdir -v -p build/web
+          cp  ${{ github.workspace }} build/web/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: web
+          path: project/${{ env.EXPORT_NAME }}/build/web
+
+      - name: Publish to itch.io
+        uses: josephbmanley/butler-publish-itchio-action@v1.0.2
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: web
+          ITCH_GAME: morpion
+          ITCH_USER: junkeecheese
+          PACKAGE: project/${{ env.EXPORT_NAME }}/build/web
+
+      - name: Notify Discord Channel
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@0.3.0
+        with:
+          args: 'A new update of my project is available at https://kim.itch.io/rat. You should try it!'
