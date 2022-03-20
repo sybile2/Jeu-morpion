@@ -22,7 +22,7 @@ jobs:
           CHANNEL: web
           ITCH_GAME: morpion
           ITCH_USER: junkeecheese
-          PACKAGE: morpion.html
+          PACKAGE: index.html
 
 
       - name: Notify Discord Channel
